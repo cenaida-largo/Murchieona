@@ -28,14 +28,14 @@ library(stringr)  # text manipulation
 ```{r}
 #| label: datasets
 #| message: false
-taxonomy <- read_csv("data/VERS2022_taxonomy.csv")
-assemblages <- read_csv("data/VERS2022_assemblages.csv")
-stations <- read_csv("data/VERS2022_stations.csv")
+taxonomy <- read_csv("data/VERS2022_taxonomy.csv")        #taxa list
+assemblages <- read_csv("data/VERS2022_assemblages.csv")  #occurrences
+stations <- read_csv("data/VERS2022_stations.csv")        #site coordinates
 ```
 
 # Taxa
 
-Taxa code extraction from the taxonomy file.
+Clean up the taxonomy dataframe
 
 ```{r}
 #| label: clean-taxonomy
@@ -44,10 +44,8 @@ taxonomy <- taxonomy %>%
   slice(-2)
 ```
 
-Check     abbreviated_revised_name,
-    revised_name,
-    full_revised_name,
-    justification_name_revision
+Get the names assigned to *Murchieona muldali* and *Murchieona minuscula* in #VERS2022
+
 ```{r}
 #| label: extract-target-taxa
 MUR_MUL <- taxonomy |>
@@ -62,7 +60,8 @@ MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
 
 # Distribution
 
-Useful data from the stations file
+Get site data
+
 ```{r}
 #| label: stations-selected
 
@@ -80,8 +79,7 @@ stations_selected <- stations |>
   )
 ```
 
-
-Occurrences extraction from the assemblages file 
+Get occurrences of *M. muldali*
 
 ```{r}
 #| label: mur-mul-occurrences
@@ -97,6 +95,8 @@ MUR_MUL_occ <- assemblages |>
             by = c("id_station", "source"))
 ```
 
+Get occurrences of *M. minuscula*
+
 ```{r}
 #| label: mur-min-occurrences
 MUR_MIN_occ <- assemblages |>
@@ -111,6 +111,7 @@ MUR_MIN_occ <- assemblages |>
             by = c("id_station", "source"))
 ```
 
+Map distribution
 
 ```{r}
 #| label: combined-distribution
@@ -133,7 +134,8 @@ leaflet() %>%
     color = "red"
   )
 ```
-Red points correspond to *Murchieona muldali* and blue points to *Murchieona minuscula*.
+
+Red points correspond to *M. muldali* and blue points to *M. minuscula*.
 
 # Phenology
 
@@ -274,4 +276,3 @@ Geology classes
 #| label: geology-count
 MUR_MUL_occ %>% count(geology, sort = TRUE)
 ```
-
