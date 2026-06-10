@@ -1,7 +1,12 @@
 ---
 title: "Murchieona"
 author: "Cenaida Largo"
-format: html
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: false
+    number-sections: true
 editor: visual
 ---
 
@@ -11,7 +16,6 @@ editor: visual
 #| label: setup-packages
 #| warning: false
 #| message: false
-library(here)     # working directory
 library(readr)    # read CSV
 library(dplyr)    # data manipulation
 library(leaflet)  # map visualization
@@ -34,120 +38,82 @@ stations <- read_csv("data/VERS2022_stations.csv")
 Taxa code extraction from the taxonomy file.
 
 ```{r}
-#| label: column-name cleanup
+#| label: clean-taxonomy
 taxonomy <- taxonomy %>%
   setNames(as.character(.[2, ])) %>%
   slice(-2)
 ```
 
-```{r}
-#| label: Murchieona muldali
-MUR_MUL <- taxonomy %>%
-  filter(revised_name == "Murchieona muldali") %>%
-  select(
-    abbreviated_revised_name,
+Check     abbreviated_revised_name,
     revised_name,
     full_revised_name,
     justification_name_revision
-  )
-```
-
 ```{r}
-#| label: Murchieona minuscula
-MUR_MIN <- taxonomy %>%
-  filter(revised_name == "Murchieona minuscula") %>%
-  select(
-    abbreviated_revised_name,
-    revised_name,
-    full_revised_name,
-    justification_name_revision
-  )
-```
+#| label: extract-target-taxa
+MUR_MUL <- taxonomy |>
+  filter(revised_name == "Murchieona muldali")
 
-```{r}
-#| label: taxon-code
+MUR_MIN <- taxonomy |>
+  filter(revised_name == "Murchieona minuscula")
+
 MUR_MUL_cod <- unique(MUR_MUL$abbreviated_revised_name)
 MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
 ```
 
 # Distribution
 
-Occurrences extraction from the assemblages file and get coordinates from the stations file.
-
+Useful data from the stations file
 ```{r}
-#| label: MUR_MUL_distribution
-MUR_MUL_occ <- assemblages %>% 
-  filter(abbreviated_revised_name == MUR_MUL_cod) %>% 
-  select(id_station,
-         source,
-         abbreviated_revised_name,
-         development_stage) %>% 
-    left_join(
-    stations %>% 
-      select(id_station,
-             source,
-             latitude_wgs84,
-             longitude_wgs84,
-             day,
-             month,
-             corine_land_cover,
-             corine_land_cover_particularity,
-             geology),
-    by = c("id_station", "source")
-    )
-```
+#| label: stations-selected
 
-```{r}
-#| label: MUR_MIN_distribution
-MUR_MIN_occ <- assemblages %>% 
-  filter(abbreviated_revised_name == MUR_MIN_cod) %>% 
-  select(id_station,
-         source,
-         abbreviated_revised_name,
-         development_stage) %>% 
-    left_join(
-    stations %>% 
-      select(id_station,
-             source,
-             latitude_wgs84,
-             longitude_wgs84,
-             day,
-             month,
-             corine_land_cover,
-             corine_land_cover_particularity,
-             geology),
-    by = c("id_station", "source")
-    )
-```
-
-```{r}
-#| label: MUR_MUL_map
-leaflet(MUR_MUL_occ) %>%
-  addTiles() %>%
-  addCircleMarkers(
-    lng = ~longitude_wgs84,
-    lat = ~latitude_wgs84,
-    popup = ~id_station,
-    radius = 5,
-    color = "red"
+stations_selected <- stations |>
+  select(
+    id_station,
+    source,
+    latitude_wgs84,
+    longitude_wgs84,
+    day,
+    month,
+    corine_land_cover,
+    corine_land_cover_particularity,
+    geology
   )
 ```
 
+
+Occurrences extraction from the assemblages file 
+
 ```{r}
-#| label: MUR_MIN_map
-leaflet(MUR_MIN_occ) %>%
-  addTiles() %>%
-  addCircleMarkers(
-    lng = ~longitude_wgs84,
-    lat = ~latitude_wgs84,
-    popup = ~id_station,
-    radius = 5,
-    color = "blue"
-  )
+#| label: mur-mul-occurrences
+MUR_MUL_occ <- assemblages |>
+  filter(abbreviated_revised_name == MUR_MUL_cod) |>
+  select(
+    id_station,
+    source,
+    abbreviated_revised_name,
+    development_stage
+  ) |>
+  left_join(stations_selected,
+            by = c("id_station", "source"))
 ```
 
 ```{r}
-#| label: combined_map
+#| label: mur-min-occurrences
+MUR_MIN_occ <- assemblages |>
+  filter(abbreviated_revised_name == MUR_MIN_cod) |>
+  select(
+    id_station,
+    source,
+    abbreviated_revised_name,
+    development_stage
+  ) |>
+  left_join(stations_selected,
+            by = c("id_station", "source"))
+```
+
+
+```{r}
+#| label: combined-distribution
 leaflet() %>%
   addTiles() %>%
   addCircleMarkers(
@@ -167,17 +133,21 @@ leaflet() %>%
     color = "red"
   )
 ```
+Red points correspond to *Murchieona muldali* and blue points to *Murchieona minuscula*.
 
 # Phenology
 
 Records of *M. muldali* by month.
 
 ```{r}
-#| label: create-month-name-factor
-MUR_MUL_occ$month_name <- factor(
-  month.abb[MUR_MUL_occ$month],
-  levels = month.abb
-)
+#| label: add-month-name-factor
+MUR_MUL_occ <- MUR_MUL_occ |>
+  mutate(
+    month_name = factor(
+      month.abb[month],
+      levels = month.abb
+    )
+  )
 ```
 
 ```{r}
@@ -258,7 +228,7 @@ MUR_MIN_occ %>% count(corine_land_cover, sort = TRUE)
 9.  moors and heathland (322)
 10. sclerophyllous vegetation (323)
 
-## Are there any recors of *M. muldali* in olive groves?
+## Are there any records of *M. muldali* in olive groves?
 
 ### Agricultural areas
 
@@ -270,7 +240,7 @@ MUR_MUL_occ_agri <- MUR_MUL_occ %>%
   filter(str_detect(corine_land_cover, "^2\\d{2}$"))
 ```
 
-There are `r nrow(MUR_MUL_occ_agri)` records of M. muldali in agricultural areas.
+There are `r nrow(MUR_MUL_occ_agri)` records of *M. muldali* in agricultural areas.
 
 ### Permanent crops
 
@@ -282,7 +252,7 @@ MUR_MUL_occ_per <- MUR_MUL_occ %>%
   filter(str_detect(as.character(corine_land_cover), "^22\\d$"))
 ```
 
-There are `r nrow(MUR_MUL_occ_per)` records of M. muldali in agricultural areas.
+There are `r nrow(MUR_MUL_occ_per)` records of *M. muldali* in agricultural areas.
 
 ### Olive grooves
 
@@ -294,7 +264,7 @@ MUR_MUL_occ_oli <- MUR_MUL_occ %>%
   filter(corine_land_cover == 223)
 ```
 
-There are `r nrow(MUR_MUL_occ_oli)` records of M. muldali in agricultural areas.
+There are `r nrow(MUR_MUL_occ_oli)` records of *M. muldali* in agricultural areas.
 
 # Geology
 
@@ -302,6 +272,6 @@ Geology classes
 
 ```{r}
 #| label: geology-count
-MUR_MUR_occ %>% count(geology, sort = TRUE)
+MUR_MUL_occ %>% count(geology, sort = TRUE)
 ```
 
