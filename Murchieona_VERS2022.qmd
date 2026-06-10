@@ -170,4 +170,60 @@ leaflet() %>%
 
 # Phenology
 
-# Ecology
+Records of *M. muldali* by month.
+
+```{r}
+MUR_MUR_occ$month_name <- factor(
+  month.abb[MUR_MUR_occ$month],
+  levels = month.abb
+)
+```
+
+```{r}
+ggplot(MUR_MUR_occ, aes(x = month_name)) +
+  geom_bar() +
+  labs(
+    title = paste("Monthly observations of", MUR_MUR_cod),
+    x = "Month",
+    y = "Number of observations"
+  ) +
+  theme_minimal()
+```
+
+Development stages of *M. muldali* by month.
+
+```{r}
+ggplot(MUR_MUR_occ, aes(x = month_name, fill = development_stage)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = paste("Monthly observations of", MUR_MUR_cod),
+    x = "Month",
+    y = "Number of observations",
+    fill = "Development stage"
+  ) +
+  theme_minimal()
+```
+
+Joining adults and subadults.
+
+```{r}
+MUR_MUR_occ <- MUR_MUR_occ %>%
+  mutate(
+    stage_group = case_when(
+      development_stage %in% c("adult", "subadult") ~ "adult/subadult",
+      TRUE ~ as.character(development_stage)
+    )
+  )
+```
+
+```{r}
+ggplot(MUR_MUR_occ, aes(x = month_name, fill = stage_group)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = paste("Monthly observations of", MUR_MUR_cod),
+    x = "Month",
+    y = "Number of observations",
+    fill = "Development stage"
+  ) +
+  theme_minimal()
+```
