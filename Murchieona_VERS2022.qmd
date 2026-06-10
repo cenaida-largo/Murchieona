@@ -295,3 +295,13 @@ MUR_MUL_occ_oli <- MUR_MUL_occ %>%
 ```
 
 There are `r nrow(MUR_MUL_occ_oli)` records of M. muldali in agricultural areas.
+
+# Geology
+
+Geology classes
+
+```{r}
+#| label: geology-count
+MUR_MUR_occ %>% count(geology, sort = TRUE)
+```
+
