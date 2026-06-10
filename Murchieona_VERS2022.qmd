@@ -5,23 +5,71 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+# Set up
 
 ```{r}
-1 + 1
+#| label: setup-packages
+#| warning: false
+#| message: false
+library(here)     # working directory
+library(readr)    # read CSV
+library(dplyr)    # data manipulation
+library(leaflet)  # map visualization
+library(ggplot2)  # data visualization
+library(stringr)  # text manipulation
 ```
 
-You can add options to executable code like this
+# Data import
 
 ```{r}
-#| echo: false
-2 * 2
+#| label: datasets
+#| message: false
+taxonomy <- read_csv("data/VERS2022_taxonomy.csv")
+assemblages <- read_csv("data/VERS2022_assemblages.csv")
+stations <- read_csv("data/VERS2022_stations.csv")
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+# Taxa
+
+```{r}
+#| label: column-name cleanup
+taxonomy <- taxonomy %>%
+  setNames(as.character(.[2, ])) %>%
+  slice(-2)
+```
+
+```{r}
+#| label: Murchieona muldali
+MUR_MUR <- taxonomy %>%
+  filter(revised_name == "Murchieona muldali") %>%
+  select(
+    abbreviated_revised_name,
+    revised_name,
+    full_revised_name,
+    justification_name_revision
+  )
+```
+
+```{r}
+#| label: Murchieona minuscula
+MUR_MIN <- taxonomy %>%
+  filter(revised_name == "Murchieona minuscula") %>%
+  select(
+    abbreviated_revised_name,
+    revised_name,
+    full_revised_name,
+    justification_name_revision
+  )
+```
+
+```{r}
+#| label: taxon-code
+MUR_MUR_cod <- unique(MUR_MUR$abbreviated_revised_name)
+MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
+```
+
+# Distribution
+
+# Phenology
+
+# Ecology
