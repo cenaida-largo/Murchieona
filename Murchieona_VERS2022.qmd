@@ -1,5 +1,5 @@
 ---
-title: "Murchiona"
+title: "Murchieona"
 author: "Cenaida Largo"
 format: html
 editor: visual
@@ -42,7 +42,7 @@ taxonomy <- taxonomy %>%
 
 ```{r}
 #| label: Murchieona muldali
-MUR_MUR <- taxonomy %>%
+MUR_MUL <- taxonomy %>%
   filter(revised_name == "Murchieona muldali") %>%
   select(
     abbreviated_revised_name,
@@ -66,7 +66,7 @@ MUR_MIN <- taxonomy %>%
 
 ```{r}
 #| label: taxon-code
-MUR_MUR_cod <- unique(MUR_MUR$abbreviated_revised_name)
+MUR_MUL_cod <- unique(MUR_MUL$abbreviated_revised_name)
 MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
 ```
 
@@ -75,9 +75,9 @@ MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
 Occurrences extraction from the assemblages file and get coordinates from the stations file.
 
 ```{r}
-#| label: MUR_MUR_distribution
-MUR_MUR_occ <- assemblages %>% 
-  filter(abbreviated_revised_name == MUR_MUR_cod) %>% 
+#| label: MUR_MUL_distribution
+MUR_MUL_occ <- assemblages %>% 
+  filter(abbreviated_revised_name == MUR_MUL_cod) %>% 
   select(id_station,
          source,
          abbreviated_revised_name,
@@ -121,8 +121,8 @@ MUR_MIN_occ <- assemblages %>%
 ```
 
 ```{r}
-#| label: MUR_MUR_map
-leaflet(MUR_MUR_occ) %>%
+#| label: MUR_MUL_map
+leaflet(MUR_MUL_occ) %>%
   addTiles() %>%
   addCircleMarkers(
     lng = ~longitude_wgs84,
@@ -159,7 +159,7 @@ leaflet() %>%
     color = "blue"
   ) %>%
   addCircleMarkers(
-    data = MUR_MUR_occ,
+    data = MUR_MUL_occ,
     lng = ~longitude_wgs84,
     lat = ~latitude_wgs84,
     popup = ~id_station,
@@ -173,17 +173,19 @@ leaflet() %>%
 Records of *M. muldali* by month.
 
 ```{r}
-MUR_MUR_occ$month_name <- factor(
-  month.abb[MUR_MUR_occ$month],
+#| label: create-month-name-factor
+MUR_MUL_occ$month_name <- factor(
+  month.abb[MUR_MUL_occ$month],
   levels = month.abb
 )
 ```
 
 ```{r}
-ggplot(MUR_MUR_occ, aes(x = month_name)) +
+#| label: barplot-records
+ggplot(MUR_MUL_occ, aes(x = month_name)) +
   geom_bar() +
   labs(
-    title = paste("Monthly observations of", MUR_MUR_cod),
+    title = paste("Monthly observations of", MUR_MUL_cod),
     x = "Month",
     y = "Number of observations"
   ) +
@@ -193,10 +195,11 @@ ggplot(MUR_MUR_occ, aes(x = month_name)) +
 Development stages of *M. muldali* by month.
 
 ```{r}
-ggplot(MUR_MUR_occ, aes(x = month_name, fill = development_stage)) +
+#| label: barplot-development-stages
+ggplot(MUR_MUL_occ, aes(x = month_name, fill = development_stage)) +
   geom_bar(position = "dodge") +
   labs(
-    title = paste("Monthly observations of", MUR_MUR_cod),
+    title = paste("Monthly observations of", MUR_MUL_cod),
     x = "Month",
     y = "Number of observations",
     fill = "Development stage"
@@ -207,7 +210,8 @@ ggplot(MUR_MUR_occ, aes(x = month_name, fill = development_stage)) +
 Joining adults and subadults.
 
 ```{r}
-MUR_MUR_occ <- MUR_MUR_occ %>%
+#| label: join-adult-subadult
+MUR_MUL_occ <- MUR_MUL_occ %>%
   mutate(
     stage_group = case_when(
       development_stage %in% c("adult", "subadult") ~ "adult/subadult",
@@ -217,13 +221,77 @@ MUR_MUR_occ <- MUR_MUR_occ %>%
 ```
 
 ```{r}
-ggplot(MUR_MUR_occ, aes(x = month_name, fill = stage_group)) +
+#| label: barplot-joined
+ggplot(MUR_MUL_occ, aes(x = month_name, fill = stage_group)) +
   geom_bar(position = "dodge") +
   labs(
-    title = paste("Monthly observations of", MUR_MUR_cod),
+    title = paste("Monthly observations of", MUR_MUL_cod),
     x = "Month",
     y = "Number of observations",
     fill = "Development stage"
   ) +
   theme_minimal()
 ```
+
+# Habitat
+
+using Corine Land Cover classes
+
+```{r}
+#| label: CLC-MUR-MUL
+MUR_MUL_occ %>% count(corine_land_cover, sort = TRUE)
+```
+
+```{r}
+#| label: CLC-MUR-MIN
+MUR_MIN_occ %>% count(corine_land_cover, sort = TRUE)
+```
+
+1.  pastures (231)
+2.  broad-leaved forest (311)
+3.  natural grassland (321)
+4.  inland marshes (411)
+5.  fruit trees and berry plantations (222)
+6.  mixed forest (313)
+7.  transitional woodland shrub (324)
+8.  green urban areas (141)
+9.  moors and heathland (322)
+10. sclerophyllous vegetation (323)
+
+## Are there any recors of *M. muldali* in olive groves?
+
+### Agricultural areas
+
+corine_land_cover = 2XX
+
+```{r}
+#| label: agri
+MUR_MUL_occ_agri <- MUR_MUL_occ %>% 
+  filter(str_detect(corine_land_cover, "^2\\d{2}$"))
+```
+
+There are `r nrow(MUR_MUL_occ_agri)` records of M. muldali in agricultural areas.
+
+### Permanent crops
+
+corine_land_cover = 22X
+
+```{r}
+#| label: per
+MUR_MUL_occ_per <- MUR_MUL_occ %>% 
+  filter(str_detect(as.character(corine_land_cover), "^22\\d$"))
+```
+
+There are `r nrow(MUR_MUL_occ_per)` records of M. muldali in agricultural areas.
+
+### Olive grooves
+
+corine_land_cover = 223
+
+```{r}
+#| label: oli
+MUR_MUL_occ_oli <- MUR_MUL_occ %>% 
+  filter(corine_land_cover == 223)
+```
+
+There are `r nrow(MUR_MUL_occ_oli)` records of M. muldali in agricultural areas.
