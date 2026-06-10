@@ -31,6 +31,8 @@ stations <- read_csv("data/VERS2022_stations.csv")
 
 # Taxa
 
+Taxa code extraction from the taxonomy file.
+
 ```{r}
 #| label: column-name cleanup
 taxonomy <- taxonomy %>%
@@ -69,6 +71,102 @@ MUR_MIN_cod <- unique(MUR_MIN$abbreviated_revised_name)
 ```
 
 # Distribution
+
+Occurrences extraction from the assemblages file and get coordinates from the stations file.
+
+```{r}
+#| label: MUR_MUR_distribution
+MUR_MUR_occ <- assemblages %>% 
+  filter(abbreviated_revised_name == MUR_MUR_cod) %>% 
+  select(id_station,
+         source,
+         abbreviated_revised_name,
+         development_stage) %>% 
+    left_join(
+    stations %>% 
+      select(id_station,
+             source,
+             latitude_wgs84,
+             longitude_wgs84,
+             day,
+             month,
+             corine_land_cover,
+             corine_land_cover_particularity,
+             geology),
+    by = c("id_station", "source")
+    )
+```
+
+```{r}
+#| label: MUR_MIN_distribution
+MUR_MIN_occ <- assemblages %>% 
+  filter(abbreviated_revised_name == MUR_MIN_cod) %>% 
+  select(id_station,
+         source,
+         abbreviated_revised_name,
+         development_stage) %>% 
+    left_join(
+    stations %>% 
+      select(id_station,
+             source,
+             latitude_wgs84,
+             longitude_wgs84,
+             day,
+             month,
+             corine_land_cover,
+             corine_land_cover_particularity,
+             geology),
+    by = c("id_station", "source")
+    )
+```
+
+```{r}
+#| label: MUR_MUR_map
+leaflet(MUR_MUR_occ) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    lng = ~longitude_wgs84,
+    lat = ~latitude_wgs84,
+    popup = ~id_station,
+    radius = 5,
+    color = "red"
+  )
+```
+
+```{r}
+#| label: MUR_MIN_map
+leaflet(MUR_MIN_occ) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    lng = ~longitude_wgs84,
+    lat = ~latitude_wgs84,
+    popup = ~id_station,
+    radius = 5,
+    color = "blue"
+  )
+```
+
+```{r}
+#| label: combined_map
+leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(
+    data = MUR_MIN_occ,
+    lng = ~longitude_wgs84,
+    lat = ~latitude_wgs84,
+    popup = ~id_station,
+    radius = 5,
+    color = "blue"
+  ) %>%
+  addCircleMarkers(
+    data = MUR_MUR_occ,
+    lng = ~longitude_wgs84,
+    lat = ~latitude_wgs84,
+    popup = ~id_station,
+    radius = 5,
+    color = "red"
+  )
+```
 
 # Phenology
 
